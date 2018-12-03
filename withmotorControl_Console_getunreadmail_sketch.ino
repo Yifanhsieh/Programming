@@ -1,0 +1,226 @@
+#include <Bridge.h>
+#include <TembooYunShield.h>
+#include <Console.h>
+#include <Process.h>
+#include "TembooAccount.h" // contains Temboo account information, as described below
+
+//Declare pin functions on Redboard
+#define stp 2
+#define dir 3
+#define MS1 4
+#define MS2 5
+#define EN  6
+int x;
+
+int calls = 1;   // Execution count, so this doesn't run forever
+int maxCalls = 50;   // Maximum number of times the Choreo should be executed
+
+int mail_new = 0;
+int mail_old = 0;
+int mail_difference = 0;
+
+void setup() {
+  Bridge.begin();
+  Console.begin();
+    pinMode(7,INPUT);
+    pinMode(13, OUTPUT);
+    pinMode(stp, OUTPUT);
+    pinMode(dir, OUTPUT);
+    pinMode(MS1, OUTPUT);
+    pinMode(MS2, OUTPUT);
+    pinMode(EN, OUTPUT);
+    
+  // For debugging, wait until the serial console is connected
+  delay(4000);
+  
+  while (!Console) {
+  // wait for Console port to connect.
+  }
+  ReturnToZero();
+}
+
+void loop() {
+  if (calls <= maxCalls) {
+    Console.println("Running GetUnreadMail - Run #" + String(calls++));   
+    TembooYunShieldChoreo GetUnreadMailChoreo;
+
+    // Invoke the Temboo client
+    GetUnreadMailChoreo.begin();
+
+    // Set Temboo account credentials
+    GetUnreadMailChoreo.setAccountName(TEMBOO_ACCOUNT);
+    GetUnreadMailChoreo.setAppKeyName(TEMBOO_APP_KEY_NAME);
+    GetUnreadMailChoreo.setAppKey(TEMBOO_APP_KEY);
+    
+    // Set Choreo inputs
+    GetUnreadMailChoreo.addInput("RefreshToken", "1/RTEf63dszGlNop9Rxd67MQ9gz-Z4pVRk7umKiqbNq_A");
+    GetUnreadMailChoreo.addInput("Username", "sjason8888@gmail.com");
+    GetUnreadMailChoreo.addInput("ClientSecret", "xxxxxxxxxxxxxxx");
+    GetUnreadMailChoreo.addInput("ClientID", "xxxxxxxxxxxxxxx.apps.googleusercontent.com");
+    GetUnreadMailChoreo.addInput("Password", "xxxxxxxxxxxxxxx");
+    
+    // Identify the Choreo to run
+    GetUnreadMailChoreo.setChoreo("/Library/Google/Gmail/GetUnreadMail");
+    
+    // Run the Choreo; when results are available, print them to serial
+    unsigned int returnCode = GetUnreadMailChoreo.run();
+    
+    if (returnCode == 0) {
+      
+      while(GetUnreadMailChoreo.available()) {
+        
+      String name = GetUnreadMailChoreo.readStringUntil('\x1F');
+      name.trim();
+      String data = GetUnreadMailChoreo.readStringUntil('\x1E');
+      data.trim();
+
+      mail_new = data.toInt();
+      mail_difference = mail_new - mail_old;
+      
+      if(name == "FullCount") {
+               
+   
+          Console.print("mail_new =");
+          Console.println(mail_new);
+          Console.print("mail_old =");
+          Console.println(mail_old);
+          Console.print("difference ");
+          Console.println(mail_difference);
+          
+          if(mail_difference <= 5 && mail_difference > 0){
+          digitalWrite(dir, HIGH); //Pull direction pin low to move "forward"
+          Console.println("250");
+          for(x= 1; x<250; x++){
+          digitalWrite(stp,HIGH); //Trigger one step forward
+          delay(6);
+          digitalWrite(stp,LOW); //Pull step pin low so it can be triggered again
+          delay(6);
+          
+            }
+          }
+          
+          if(mail_difference >= 5 && mail_difference <= 10){
+          digitalWrite(dir, HIGH); //Pull direction pin low to move "forward"
+          Console.println("500");
+          for(x= 1; x<500; x++){
+          digitalWrite(stp,HIGH); //Trigger one step forward
+          delay(6);
+          digitalWrite(stp,LOW); //Pull step pin low so it can be triggered again
+          delay(6);
+          
+            }         
+          }
+          
+          if(mail_difference > 10 && mail_difference <= 20){
+          digitalWrite(dir, HIGH); //Pull direction pin low to move "forward"
+          Console.println("750");
+          for(x= 1; x<750; x++){
+          digitalWrite(stp,HIGH); //Trigger one step forward
+          delay(6);
+          digitalWrite(stp,LOW); //Pull step pin low so it can be triggered again
+          delay(6);
+          
+            }         
+          }
+          
+          if(mail_difference > 20){
+          digitalWrite(dir, HIGH); //Pull direction pin low to move "forward"
+          Console.println("1000");
+          for(x= 1; x<1000; x++){
+          digitalWrite(stp,HIGH); //Trigger one step forward
+          delay(6);
+          digitalWrite(stp,LOW); //Pull step pin low so it can be triggered again
+          delay(6);
+          
+            }
+          }       
+        
+          
+          if(mail_difference >= -5 && mail_difference < 0){
+          digitalWrite(dir, LOW); //Pull direction pin low to move "forward"
+          Console.println("-250");
+          for(x= 1; x<250; x++){
+          digitalWrite(stp,HIGH); //Trigger one step forward
+          delay(6);
+          digitalWrite(stp,LOW); //Pull step pin low so it can be triggered again
+          delay(6);
+            }
+          }
+          if(mail_difference <= -5 && mail_difference >= -10){
+          digitalWrite(dir, LOW); //Pull direction pin low to move "forward"
+          Console.println("-500");
+          for(x= 1; x<500; x++){
+          digitalWrite(stp,HIGH); //Trigger one step forward
+          delay(6);
+          digitalWrite(stp,LOW); //Pull step pin low so it can be triggered again
+          delay(6);
+          
+            }         
+          }
+          if(mail_difference < -10 && mail_difference >= -20){
+          digitalWrite(dir, LOW); //Pull direction pin low to move "forward"
+          Console.println("-750");
+          for(x= 1; x<750; x++){
+          digitalWrite(stp,HIGH); //Trigger one step forward
+          delay(6);
+          digitalWrite(stp,LOW); //Pull step pin low so it can be triggered again
+          delay(6);
+          
+            }         
+          }
+          if(mail_difference < -20){
+          digitalWrite(dir, LOW); //Pull direction pin low to move "forward"
+          Console.println("-1000");
+          for(x= 1; x<1000; x++){
+          digitalWrite(stp,HIGH); //Trigger one step forward
+          delay(6);
+          digitalWrite(stp,LOW); //Pull step pin low so it can be triggered again
+          delay(6);
+          
+            }
+          }                    
+      /*char c = GetUnreadMailChoreo.read();
+      Console.print(c);  */
+         mail_old = mail_new;
+        }
+      }
+    }
+    GetUnreadMailChoreo.close();
+  }
+  Console.println("Waiting...");
+  delay(10000); // wait 30 seconds between GetUnreadMail calls
+  }
+
+  void resetEDPins()
+{
+  digitalWrite(stp, LOW);
+  digitalWrite(dir, LOW);
+  digitalWrite(MS1, LOW);
+  digitalWrite(MS2, LOW);
+  digitalWrite(EN, HIGH);
+}
+
+void SmallStepMode1000()
+{
+  digitalWrite(dir, LOW); //Pull direction pin low to move "forward"
+  for(x= 1; x<1000; x++)  //Loop the forward stepping enough times for motion to be visible
+  {
+    digitalWrite(stp,HIGH); //Trigger one step forward
+    delay(6);
+    digitalWrite(stp,LOW); //Pull step pin low so it can be triggered again
+    delay(6);
+  }
+}
+
+
+void ReturnToZero()
+{
+  digitalWrite(dir, LOW); //Pull direction pin low to move "forward"
+  for(x= 1; x<1000; x++)  //Loop the forward stepping enough times for motion to be visible
+  {
+    digitalWrite(stp,HIGH); //Trigger one step forward
+    delay(6);
+    digitalWrite(stp,LOW); //Pull step pin low so it can be triggered again
+    delay(6);
+  }
+}
